@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.rsreu.lint.deliverysystem.model.User;
 import ru.rsreu.lint.deliverysystem.model.enums.UserRole;
+import ru.rsreu.lint.deliverysystem.model.exception.ResourceConflictException;
 import ru.rsreu.lint.deliverysystem.model.exception.UserNotFoundException;
 import ru.rsreu.lint.deliverysystem.repository.UserRepository;
 
@@ -21,7 +22,7 @@ public class ClientServiceImpl implements ClientService {
     public User create(User user) {
         User possibleUser = userRepository.findByLogin(user.getLogin());
         if (possibleUser != null) {
-            throw new UserNotFoundException();
+            throw new ResourceConflictException();
         }
 
         UserRole clientRole = UserRole.CLIENT;
