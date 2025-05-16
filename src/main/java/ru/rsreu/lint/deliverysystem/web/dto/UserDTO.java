@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
+import ru.rsreu.lint.deliverysystem.model.enums.UserRole;
 
 @Data
 @Builder
@@ -20,4 +21,7 @@ public class UserDTO {
             max = 255,
             message = "Password length must be between {min} and {max}.")
     private String password;
+
+    @NotNull(message = "User role must be not null.")
+    private UserRole role;
 }

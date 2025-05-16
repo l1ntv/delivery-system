@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.rsreu.lint.deliverysystem.model.exception.ExceptionBody;
 import ru.rsreu.lint.deliverysystem.model.exception.OrderNotFoundException;
+import ru.rsreu.lint.deliverysystem.model.exception.ResourceConflictException;
 import ru.rsreu.lint.deliverysystem.model.exception.UserNotFoundException;
 
 @RestControllerAdvice
@@ -23,6 +24,12 @@ public class RestExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ExceptionBody orderNotFound(OrderNotFoundException e) {
         return new ExceptionBody("Order not found.");
+    }
+
+    @ExceptionHandler(ResourceConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ExceptionBody resourceConflict(ResourceConflictException e) {
+        return new ExceptionBody("Resource conflict.");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
