@@ -38,5 +38,4 @@ public class OrderDTO {
             max = 255,
             message = "Country length must be between {min} and {max}.")
     private String country;
-
 }
