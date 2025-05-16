@@ -15,7 +15,6 @@ import ru.rsreu.lint.deliverysystem.model.enums.OrderStatus;
 public class Order extends AbstractEntity {
 
     @Column(name = "description", nullable = false)
-    @Length(min = 0, max = 255)
     private String description;
 
     @Column(name = "status", nullable = false)
