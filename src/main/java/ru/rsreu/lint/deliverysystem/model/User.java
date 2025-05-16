@@ -1,4 +1,25 @@
 package ru.rsreu.lint.deliverysystem.model;
 
-public class User {
+import jakarta.persistence.*;
+import lombok.*;
+import ru.rsreu.lint.deliverysystem.model.enums.UserRole;
+
+@Entity(name = "users")
+@Getter
+@Setter
+@ToString
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class User extends AbstractEntity {
+
+    @Column(nullable = false, unique = true)
+    private String login;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(name = "role", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 }

@@ -1,4 +1,4 @@
-package ru.rsreu.lint.deliverysystem.model;
+package ru.rsreu.lint.deliverysystem.model.enums;
 
 public enum OrderStatus {
 
