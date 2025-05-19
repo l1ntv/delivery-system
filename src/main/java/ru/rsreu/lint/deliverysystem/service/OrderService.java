@@ -1,7 +1,6 @@
 package ru.rsreu.lint.deliverysystem.service;
 
 import ru.rsreu.lint.deliverysystem.model.Order;
-import ru.rsreu.lint.deliverysystem.model.enums.OrderStatus;
 
 import java.util.List;
 

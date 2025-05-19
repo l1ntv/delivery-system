@@ -15,7 +15,6 @@ import ru.rsreu.lint.deliverysystem.repository.UserRepository;
 import java.util.List;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
@@ -24,6 +23,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public Order create(Order order) {
         order.setStatus(OrderStatus.CREATED);
         return orderRepository.save(order);
@@ -40,16 +40,21 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order assignOrder(Long orderId, Long courierId) {
         User courier = userRepository.findById(courierId)
                 .orElseThrow(UserNotFoundException::new);
         List<Order> currentOrders = orderRepository.findAllByCourierAndStatus(courier, OrderStatus.IN_PROGRESS);
-        if (currentOrders.size() >= 3) {
+        if (isNumberOrdersCorrect(currentOrders.size())) {
             throw new ResourceConflictException();
         }
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(OrderNotFoundException::new);
+        if (order.getCourier() != null) {
+            throw new ResourceConflictException();
+        }
+
         order.setStatus(OrderStatus.IN_PROGRESS);
         order.setCourier(courier);
         orderRepository.save(order);
@@ -57,6 +62,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public Order updateOrderStatus(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(OrderNotFoundException::new);
@@ -69,5 +75,9 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(newStatus);
         orderRepository.save(order);
         return order;
+    }
+
+    private boolean isNumberOrdersCorrect(int numberOrders) {
+        return numberOrders >= 3;
     }
 }

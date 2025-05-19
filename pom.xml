@@ -32,6 +32,7 @@
         <hibernate-validator.version>8.0.2.Final</hibernate-validator.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <h2.version>2.3.232</h2.version>
+        <log4j2.version>2.24.3</log4j2.version>
     </properties>
     <dependencies>
         <dependency>
@@ -84,6 +85,12 @@
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
             <version>${hibernate-validator.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j2.version}</version>
         </dependency>
     </dependencies>
 

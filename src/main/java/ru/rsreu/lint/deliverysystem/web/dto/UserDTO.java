@@ -16,12 +16,6 @@ public class UserDTO {
             message = "Login length must be between {min} and {max}.")
     private String login;
 
-    @NotNull(message = "Password must be not null.")
-    @Length(min = 1,
-            max = 255,
-            message = "Password length must be between {min} and {max}.")
-    private String password;
-
     @NotNull(message = "User role must be not null.")
     private UserRole role;
 }

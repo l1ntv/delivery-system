@@ -16,9 +16,6 @@ public class User extends AbstractEntity {
     @Column(nullable = false, unique = true)
     private String login;
 
-    @Column(nullable = false)
-    private String password;
-
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole role;

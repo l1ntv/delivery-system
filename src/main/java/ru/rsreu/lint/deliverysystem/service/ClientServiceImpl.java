@@ -12,16 +12,16 @@ import ru.rsreu.lint.deliverysystem.repository.UserRepository;
 import java.util.List;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class ClientServiceImpl implements ClientService {
 
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public User create(User user) {
-        User possibleUser = userRepository.findByLogin(user.getLogin());
-        if (possibleUser != null) {
+        String login = user.getLogin();
+        if (userRepository.findByLogin(login) != null) {
             throw new ResourceConflictException();
         }
 
