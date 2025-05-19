@@ -2,7 +2,6 @@ package ru.rsreu.lint.deliverysystem.web.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 import ru.rsreu.lint.deliverysystem.model.User;
 import ru.rsreu.lint.deliverysystem.web.dto.UserDTO;
 

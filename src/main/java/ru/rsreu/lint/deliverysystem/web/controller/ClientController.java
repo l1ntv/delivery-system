@@ -2,7 +2,6 @@ package ru.rsreu.lint.deliverysystem.web.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +20,6 @@ public class ClientController {
 
     private final ClientService clientService;
 
-    @Autowired
     private final UserMapper userMapper;
 
     @PostMapping
@@ -43,5 +41,4 @@ public class ClientController {
         User user = clientService.findById(id);
         return userMapper.toDto(user);
     }
-
 }

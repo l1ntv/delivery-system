@@ -2,7 +2,6 @@ package ru.rsreu.lint.deliverysystem.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.validator.constraints.Length;
 import ru.rsreu.lint.deliverysystem.model.enums.OrderStatus;
 
 @Entity(name = "orders")
