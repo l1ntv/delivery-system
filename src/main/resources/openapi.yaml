@@ -3,9 +3,6 @@ info:
   title: Delivery system API
   version: 1.0.0
   description: REST API для системы доставки
-servers:
-  - url: https://api.delivery-system.com/v1
-    description: Production server
 
 tags:
   - name: Client
@@ -27,6 +24,19 @@ paths:
       responses:
         '201':
           description: Успешное создание клиента
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '409':
+          description: Логин уже занят
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '400':
           description: Неверные входные данные
           content:
@@ -34,109 +44,43 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
 
-  /auth/register/client:
-    post:
-      tags:
-        - Authentication
-      summary: Регистрация клиента
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClientRegistrationRequest'
-      responses:
-        '201':
-          description: Успешная регистрация
-        '400':
-          description: Неверные данные
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-
-  /auth/login:
-    post:
-      tags:
-        - Authentication
-      summary: Авторизация
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                login: { type: string }
-                password: { type: string }
-              required: [ login, password ]
-      responses:
-        '200':
-          description: Успешная авторизация
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token: { type: string }
-        '400':
-          description: Неверные учетные данные
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-        '423':
-          description: Пользователь заблокирован
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-
-  /clients/my-profile:
     get:
       tags:
-        - Clients
-      summary: Основная информация клиента
-      security:
-        - bearerAuth: [ ]
+        - Client
+      summary: Получение всех клиентов
       responses:
         '200':
-          description: Успешный запрос
+          description: Успешный вывод всех клиентов
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClientMainResponse'
-        '401':
-          description: Неавторизованный доступ
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDTO'
 
   /clients/{id}:
     get:
       tags:
-        - Clients
-      summary: Профиль клиента по id
+        - Client
+      summary: Получение клиента по id
       parameters:
-        - $ref: '#/components/parameters/ClientId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Уникальный идентификатор клиента
       responses:
         '200':
-          description: Профиль клиента
+          description: Успешный вывод клиента по id
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClientMainResponse'
+                $ref: '#/components/schemas/UserDTO'
         '404':
           description: Клиент не найден
           content:
@@ -144,316 +88,80 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
 
-  /clients/my-orders:
+  /couriers:
+    post:
+      tags:
+        - Courier
+      summary: Создание курьера
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDTO'
+      responses:
+        '201':
+          description: Успешное создание курьера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '409':
+          description: Логин уже занят
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '400':
+          description: Неверные входные данные
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
     get:
       tags:
-        - Clients
-      summary: Список заказов клиента
-      security:
-        - bearerAuth: [ ]
+        - Courier
+      summary: Получение всех курьеров
       responses:
         '200':
-          description: Успешный запрос
+          description: Успешный вывод всех курьеров
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ClientOrder'
-        '401':
-          description: Неавторизованный доступ
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-
-  /clients/update:
-    put:
-      tags:
-        - Clients
-      summary: Обновление профиля клиента
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClientUpdateRequest'
-      responses:
-        '200':
-          description: Профиль обновлен
-        '400':
-          description: Неверные данные
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-        '401':
-          description: Неавторизованный доступ
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-
-  /masters:
-    get:
-      tags:
-        - Masters
-      summary: Поиск мастеров по категории
-      parameters:
-        - name: category
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Список мастеров
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MastersListResponse'
-        '400':
-          description: Неверные параметры запроса
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-
-  /masters/{id}:
-    get:
-      tags:
-        - Masters
-      summary: Профиль мастера
-      parameters:
-        - $ref: '#/components/parameters/MasterId'
-      responses:
-        '200':
-          description: Профиль мастера
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MasterProfile'
-        '404':
-          description: Мастер не найден
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-
-  /masters/my-public-profile:
-    get:
-      tags:
-        - Masters
-      summary: Получение публичного профиля мастера
-      security:
-        - bearerAuth: [ ]
-      responses:
-        '200':
-          description: Профиль успешно получен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MasterProfile'
-        '404':
-          description: Профиль мастера не найден
-
-  /masters/my-private-profile:
-    get:
-      tags:
-        - Masters
-      summary: Получение приватного профиля мастера
-      security:
-        - bearerAuth: [ ]
-      responses:
-        '200':
-          description: Профиль успешно получен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MasterProfileForMeDTO'
-        '404':
-          description: Профиль мастера не найден
-
-  /masters/update-public-profile:
-    put:
-      tags:
-        - Masters
-      summary: Обновление профиля мастера
-      parameters:
-        - $ref: '#/components/parameters/MasterId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MasterUpdateRequest'
-      responses:
-        '200':
-          description: Профиль обновлен
-        '400':
-          description: Неверные данные
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-        '401':
-          description: Неавторизованный доступ
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-
-  /masters/update-private-profile:
-    put:
-      tags:
-        - Masters
-      summary: Обновление приватного профиля мастера
-      security:
-        - bearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MasterPrivateProfileUpdateRequestDTO'
-      responses:
-        '200':
-          description: Профиль успешно обновлен
-        '400':
-          description: Некорректные данные в запросе
-        '403':
-          description: Необходима авторизация
-        '404':
-          description: Профиль мастера не найден
+                  $ref: '#/components/schemas/UserDTO'
 
   /orders:
-    get:
-      tags:
-        - Orders
-      summary: Выставленные заказы клиентами
-      security:
-        - bearerAuth: [ ]
-      responses:
-        '200':
-          description: Список выставленных заказов клиентами, категория которых совпадает с возможными услугами мастера, фото и баланс мастера
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ClientsOrdersResponse'
-        '403':
-          description: Мастер не был авторизован
-          content: { }
-        '404':
-          description: Статус заказа не найден/Авторизованный пользователь не найден/Баланс мастера не найден
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-
-  /orders/{orderId}/assign-order:
-    patch:
-      tags:
-        - Orders
-      summary: Взятие выставленного клиентом заказа мастером
-      security:
-        - bearerAuth: [ ]
-      parameters:
-        - name: orderId
-          in: path
-          required: true
-          description: ID заказа
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Мастер забрал заказа клиента; деньги клиента ушли на счет сервиса
-          content: { }
-        '403':
-          description: Мастер не был авторизован
-          content: { }
-        '404':
-          description: Заказ не найден/Статус заказа не найден/Авторизованный пользователь не найден/Профиль мастера не найден/Баланс клиента не найден
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-        '409':
-          description: Заказ уже забрал другой мастер/У клиента не хватает денег
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-
-  /orders/get-services:
-    get:
-      tags:
-        - Orders
-      summary: Получение списка всех сервисов в системе
-      security:
-        - bearerAuth: [ ]
-      responses:
-        '200':
-          description: Список всех сервисов в системе
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EnumServicesResponse'
-
-  /orders/create-order:
     post:
       tags:
-        - Orders
-      summary: Выставление заказа клиентом
-      security:
-        - bearerAuth: [ ]
+        - Order
+      summary: Создание заказа
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreatedOrderRequest'
+              $ref: '#/components/schemas/OrderDTO'
       responses:
-        '200':
-          description: Клиент выставил заказ, деньги списались
-          content: { }
-        '403':
-          description: Клиент не был авторизован
-          content: { }
-        '404':
-          description: Авторизованный пользователь не найден/Профиль клиента не найден/Сервис не найден/Статус заказа не найден/Баланс клиента не найден
+        '201':
+          description: Успешное создание заказа
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-        '409':
-          description: Дублирование выставленного заказа/Нехватка денег у клиента
+                $ref: '#/components/schemas/OrderDTO'
+        '400':
+          description: Неверные входные данные
           content:
             application/json:
               schema:
@@ -462,253 +170,44 @@ paths:
                   error:
                     type: string
 
-  /orders/{orderId}/close-order:
-    patch:
-      tags:
-        - Orders
-      summary: Закрытие заказа клиентом
-      security:
-        - bearerAuth: [ ]
-      parameters:
-        - name: orderId
-          in: path
-          required: true
-          description: ID заказа
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Клиент закрыл заказ; деньги перевелись мастеру
-          content: { }
-        '403':
-          description: Клиент не был авторизован
-          content: { }
-        '404':
-          description: Авторизованный пользователь не найден/Профиль клиента не найден/Статус заказа не найден/Заказ не найден/Баланс мастера не найден
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-
-  /orders/{masterId}/offer-order:
-    patch:
-      tags:
-        - Orders
-      summary: Предложение заказа мастеру от клиента
-      security:
-        - bearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatedOrderRequest'
-      parameters:
-        - name: masterId
-          in: path
-          required: true
-          description: ID мастера
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Клиент предложил заказ мастеру
-          content: { }
-        '403':
-          description: Клиент не был авторизован
-          content: { }
-        '404':
-          description: Авторизованный пользователь не найден/Профиль клиента не найден/Профиль мастера не найден/Сервис не найден/Статус заказа не найден/Баланс клиента не найден
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-        '409':
-          description: Дублирование предложенного заказа/Нехватка денег у клиента
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-
-  /orders/{orderId}/accept-order:
-    patch:
-      tags:
-        - Orders
-      summary: Принятие заказа мастером
-      security:
-        - bearerAuth: [ ]
-      parameters:
-        - name: orderId
-          in: path
-          required: true
-          description: ID заказа
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Мастер принял заказ, деньги клиента ушли на счет сервиса
-          content: { }
-        '403':
-          description: Клиент не был авторизован
-          content: { }
-        '404':
-          description: Авторизованный пользователь не найден/Заказ не найден/Профиль мастера не найден/Статус заказа не найден/Баланс клиента не найден
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-        '409':
-          description: Заказ был отправлен не авторизованному мастеру, а какому-то другому мастеру/Нехватка денег у клиента
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-
-  /orders/{orderId}/cancel-order:
-    delete:
-      tags:
-        - Orders
-      summary: Отмена выставленного заказа клиента
-      security:
-        - bearerAuth: [ ]
-      parameters:
-        - name: orderId
-          in: path
-          required: true
-          description: ID заказа
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Заказ удален, деньги возвращены клиенту на счет
-          content: { }
-        '403':
-          description: Клиент не был авторизован
-          content: { }
-        '404':
-          description: Авторизованный пользователь не найден/Заказ не найден/Профиль клиента не найден/Баланс клиента не найден
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-        '409':
-          description: Заказ не принадлежит авторизованному клиенту/Заказ уже забрал мастер - отменить нельзя
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-
-  /orders/{orderId}/decline-order:
-    patch:
-      tags:
-        - Orders
-      summary: Отклонение заказа мастером
-      security:
-        - bearerAuth: [ ]
-      parameters:
-        - name: orderId
-          in: path
-          required: true
-          description: ID заказа
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Мастер отказался от заказа
-          content: { }
-        '403':
-          description: Клиент не был авторизован
-          content: { }
-        '404':
-          description: Авторизованный пользователь не найден/Заказ не найден/Профиль мастера не найден/Статус заказа не найден
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-        '409':
-          description: Заказ был отправлен не авторизованному мастеру, а какому-то другому мастеру
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-
-  /masters/my-orders:
     get:
       tags:
-        - Masters
-      summary: Получение списка заказов мастера
-      security:
-        - bearerAuth: [ ]
+        - Order
+      summary: Получение всех заказов
       responses:
         '200':
-          description: Список заказов успешно получен
+          description: Успешный вывод всех заказов
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/OrderMasterDTO'
-        '401':
-          description: Необходима авторизация
-        '404':
-          description: Заказы мастера не найдены
+                  $ref: '#/components/schemas/OrderDTO'
 
-  /feedback/{orderId}:
-    patch:
+  /orders/courier/{courierId}:
+    post:
       tags:
-        - Feedback
-      summary: Оставление отзыва на заказ от клиента
-      security:
-        - bearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeedbackRequest'
+        - Order
+      summary: Получение заказов курьера
       parameters:
-        - name: orderId
+        - name: courierId
           in: path
           required: true
-          description: ID заказа
           schema:
             type: integer
+            format: int64
+          description: Уникальный идентификатор курьера
       responses:
         '200':
-          description: Клиент оставил отзыв
-          content: { }
-        '403':
-          description: Клиент не был авторизован
-          content: { }
+          description: Успешный вывод всех заказов курьера
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderDTO'
         '404':
-          description: Данные отзыва некорректные/Авторизованный пользователь не найден/Профиль клиента не найден/Профиль мастера не найден/Заказ не найден
+          description: Курьер не найден
           content:
             application/json:
               schema:
@@ -716,8 +215,51 @@ paths:
                 properties:
                   error:
                     type: string
+        '400':
+          description: Неверные входные данные
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /orders/{id}/assign:
+    put:
+      tags:
+        - Order
+      summary: Подписание заказа курьеру
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Уникальный идентификатор заказа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                courierId:
+                  type: integer
+                  format: int64
+                  description: Уникальный идентификатор курьера
+              required:
+                - courierId
+      responses:
+        '200':
+          description: Успешное подписание заказа курьеру
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDTO'
         '409':
-          description: Дублирование отзыва/Заказ не принадлежит клиенту
+          description: Количество заказов курьера >= 3 / Заказ уже принадлежит какому-то курьеру
           content:
             application/json:
               schema:
@@ -725,89 +267,17 @@ paths:
                 properties:
                   error:
                     type: string
-  /images/upload:
-    post:
-      tags:
-        - Files
-      summary: Загрузка изображения
-      description: Загружает файл изображения в хранилище
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                  description: Файл изображения для загрузки
-      responses:
-        '200':
-          description: Файл успешно загружен
+        '404':
+          description: Курьер не найден / Заказ не найден
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileResponseDto'
+                type: object
+                properties:
+                  error:
+                    type: string
         '400':
-          description: Неверный формат файла
-        '401':
-          description: Требуется авторизация
-        '500':
-          description: Ошибка загрузки файла
-
-  /images/delete:
-    post:
-      tags:
-        - Files
-      summary: Удаление изображения
-      description: Удаляет файл изображения из хранилища по имени файла
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                filename:
-                  type: string
-                  description: Имя файла для удаления
-      responses:
-        '200':
-          description: Файл успешно удален
-        '400':
-          description: Не указано имя файла
-        '401':
-          description: Требуется авторизация
-        '404':
-          description: Файл не найден
-        '500':
-          description: Ошибка удаления файла
-
-
-
-  /finance/withdrawal:
-    patch:
-      tags:
-        - Finance
-      summary: Вывод денег с баланса
-      security:
-        - bearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FinanceOperationRequest'
-      responses:
-        '200':
-          description: В сервис финансов был отправлен запрос. Баланс пользователя будет обновлен спустя время.
-          content: { }
-        '403':
-          description: Клиент не был авторизован
-          content: { }
-        '404':
-          description: Авторизованный пользователь не найден/Финансовый баланс не найден
+          description: Неверные входные данные
           content:
             application/json:
               schema:
@@ -816,28 +286,37 @@ paths:
                   error:
                     type: string
 
-  /finance/replenishment:
-    patch:
+  /orders/{id}/status:
+    put:
       tags:
-        - Finance
-      summary: Пополнение денег баланса
-      security:
-        - bearerAuth: [ ]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FinanceOperationRequest'
+        - Order
+      summary: Обновление статуса заказа
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Уникальный идентификатор заказа
       responses:
         '200':
-          description: В сервис финансов был отправлен запрос. Баланс пользователя будет обновлен спустя время.
-          content: { }
-        '403':
-          description: Клиент не был авторизован
-          content: { }
+          description: Успешное обновление статуса заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDTO'
         '404':
-          description: Авторизованный пользователь не найден/Финансовый баланс не найден
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '400':
+          description: Неверные входные данные
           content:
             application/json:
               schema:
@@ -848,336 +327,61 @@ paths:
 
 components:
   schemas:
-    FinanceOperationRequest:
+    UserRole:
+      type: string
+      enum:
+        - CLIENT
+        - COURIER
+      description: Роль пользователя
+
+    OrderStatus:
+      type: string
+      enum:
+        - CREATED
+        - IN_PROGRESS
+        - DELIVERED
+      description: Статусы заказов
+
+    UserDTO:
       type: object
       properties:
-        moneyCount: { type: integer }
-      required: [ moneyCount ]
+        login:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+      required:
+        - login
+        - role
+      example:
+        login: "login"
+        role: "CLIENT"
 
-    FeedbackRequest:
+    OrderDTO:
       type: object
       properties:
-        evaluation: { type: integer }
-        description: { type: string, maxLength: 255 }
-      required: [ evaluation, description ]
-
-    ClientRegistrationRequest:
-      type: object
-      properties:
-        login: { type: string, format: email }
-        password: { type: string, minLength: 8 }
-      required: [ login, password ]
-
-    MasterRegistrationRequest:
-      type: object
-      properties:
-        login: { type: string, format: email }
-        password: { type: string, minLength: 8 }
-        lastName: { type: string }
-        firstName: { type: string }
-        patronymic: { type: string }
-        services:
-          type: array
-          items:
-            $ref: '#/components/schemas/Service'
-        isOrganization: { type: boolean }
-        organizationName: { type: string }
-      required: [ login, password, lastName, firstName, services ]
-
-    CreatedOrderRequest:
-      type: object
-      properties:
-        serviceType: { type: string }
-        description: { type: string }
-        price: { type: integer }
-        address: { type: string }
-        dateFrom: { type: string, format: date }
-        dateTo: { type: string, format: date }
-      required: [ serviceType, description, price, address, dateFrom, dateTo ]
-
-    EnumServicesResponse:
-      type: object
-      properties:
-        services:
-          type: array
-          items:
-            { type: string }
-      required: [ services ]
-
-    ClientMainResponse:
-      type: object
-      properties:
-        photoUrl: { type: string, format: uri }
-        balance: { type: integer }
-
-    ClientOrder:
-      type: object
-      properties:
-        serviceType:
-          type: string
-          enum: [ DECORATOR, SOUND_ENGINEER, LIGHT_ENGINEER, PHOTOGRAPHER, VIDEOGRAPHER, CHEF, WAITER, HOST ]
-        description: { type: string }
-        address: { type: string }
-        price: { type: integer }
-        dateFrom: { type: string, format: date }
-        dateTo: { type: string, format: date }
-        phoneMaster: { type: string }
-
-    ClientUpdateRequest:
-      type: object
-      properties:
-        surname: { type: string }
-        name: { type: string }
-        patronymic: { type: string }
-        email: { type: string }
-        telephoneNumber: { type: string }
-        city: { type: string }
-        filename: { type: string }
-        uuid: { type: string, format: uuid }
-
-    Service:
-      type: object
-      properties:
-        serviceName:
-          type: string
-          enum: [ DECORATOR, SOUND_ENGINEER, LIGHT_ENGINEER, PHOTOGRAPHER, VIDEOGRAPHER, CHEF, WAITER, HOST ]
-        cost: { type: integer }
-
-    FileResponse:
-      type: object
-      properties:
-        filename:
-          type: string
-        uuid:
-          type: string
-          format: uuid
-
-    MasterProfile:
-      type: object
-      properties:
-        id: { type: integer }
-        fullName: { type: string }
-        description: { type: string }
-        onlineStatus: { type: boolean }
-        photos:
-          type: array
-          items: { type: string, format: uri }
-        personalPhoto: { type: string, format: uri }
-        averageRating: { type: number, format: float }
-        ratingCount: { type: integer }
-        passportVerified: { type: boolean }
-        contractWork: { type: boolean }
-        services:
-          type: array
-          items:
-            $ref: '#/components/schemas/Service'
-        districts:
-          type: array
-          items:
-            type: string
-        reports:
-          type: array
-          items:
-            $ref: '#/components/schemas/Report'
-
-    MastersListResponse:
-      type: object
-      properties:
-        masters:
-          type: array
-          items:
-            $ref: '#/components/schemas/MasterProfile'
-        photoUrl: { type: string, format: uri }
-        balance: { type: integer }
-
-    Report:
-      type: object
-      properties:
-        id: { type: integer }
-        text: { type: string }
-        rating: { type: integer }
-        date: { type: string, format: date }
-
-    MasterPrivateProfileUpdateRequestDTO:
-      type: object
-      properties:
-        surname:
-          type: string
-          description: Фамилия мастера
-        name:
-          type: string
-          description: Имя мастера
-        patronymic:
-          type: string
-          description: Отчество мастера
-        email:
-          type: string
-          format: email
-          description: Email мастера
-        telephoneNumber:
-          type: string
-          description: Номер телефона мастера
-        isCompany:
-          type: boolean
-          description: Является ли мастер компанией
-        passportSeries:
-          type: string
-          description: Серия паспорта мастера
-        passportNumber:
-          type: string
-          description: Номер паспорта мастера
-
-    MasterUpdateRequest:
-      type: object
-      properties:
-        description: { type: string }
-        personalPhoto:
-          type: string
-          format: uri
-          nullable: true
-          description: URL основного изображения профиля (необязательный параметр)
-        photos:
-          type: array
-          items:
-            $ref: '#/components/schemas/FileResponse'
-        services:
-          type: array
-          items:
-            $ref: '#/components/schemas/Service'
-        districts:
-          type: array
-          items:
-            type: string
-        filename:
-          type: string
-          description: Имя файла основного изображения
-          nullable: true
-        uuid:
-          type: string
-          format: uuid
-          description: UUID основного изображения
-          nullable: true
-
-
-    MasterProfileForMeDTO:
-      type: object
-      properties:
-        surname:
-          type: string
-          description: Фамилия мастера
-        name:
-          type: string
-          description: Имя мастера
-        patronymic:
-          type: string
-          description: Отчество мастера
-        email:
-          type: string
-          format: email
-          description: Email мастера
-        telephoneNumber:
-          type: string
-          description: Номер телефона мастера
-        isCompany:
-          type: boolean
-          description: Является ли мастер компанией
-        isConfirmedPassport:
-          type: boolean
-          description: Подтвержден ли паспорт мастера
-        passportSeries:
-          type: string
-          description: Серия паспорта мастера
-        passportNumber:
-          type: string
-          description: Номер паспорта мастера
-
-    OrderMasterDTO:
-      type: object
-      properties:
-        serviceType:
-          type: string
-          description: Тип услуги
         description:
           type: string
-          description: Описание заказа
-        address:
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        street:
           type: string
-          description: Адрес выполнения заказа
-        price:
-          type: integer
-          description: Цена заказа
-        dateFrom:
+        city:
           type: string
-          format: date
-          description: Дата начала выполнения заказа
-        dateTo:
+        postalCode:
           type: string
-          format: date
-          description: Дата окончания выполнения заказа
-        phoneClient:
+        country:
           type: string
-          description: Номер телефона клиента
-
-    FileResponseDto:
-      type: object
-      properties:
-        filename:
-          type: string
-        uuid:
-          type: string
-          format: uuid
-
-    ClientsOrdersResponse:
-      type: object
-      properties:
-        placedOrdersByClients:
-          type: array
-          items:
-            $ref: '#/components/schemas/PlacedOrdersByClientsResponse'
-        photoUrl: { type: string }
-        balance: { type: integer }
-      required: [ placedOrdersByClients, balance ]
-
-    PlacedOrdersByClientsResponse:
-      type: object
-      properties:
-        id: { type: integer }
-        serviceType: { type: string }
-        address: { type: string }
-        price: { type: integer }
-        dateFrom: { type: string, format: date }
-        dateTo: { type: string, format: date }
-
-
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  parameters:
-    MasterId:
-      name: id
-      in: path
-      description: ID мастера
-      required: true
-      schema:
-        type: integer
-
-    ClientId:
-      name: id
-      in: path
-      description: ID клиента
-      required: true
-      schema:
-        type: integer
-
-  responses:
-    UnauthorizedError:
-      description: Неавторизованный доступ
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error: { type: string }
+      required:
+        - description
+        - status
+        - street
+        - city
+        - postalCode
+        - country
+      example:
+        description: "Some description"
+        status: "CREATED"
+        street: "Street"
+        city: "City"
+        postalCode: "postalCode"
+        country: "Country"
