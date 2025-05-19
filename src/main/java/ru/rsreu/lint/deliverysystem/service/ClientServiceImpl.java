@@ -32,12 +32,12 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public List<User> findAll() {
-        return userRepository.findAll();
+        return userRepository.findAllByRole(UserRole.CLIENT);
     }
 
     @Override
     public User findById(Long id) {
-        return userRepository.findById(id)
+        return userRepository.findByIdAndRole(id, UserRole.CLIENT)
                 .orElseThrow(UserNotFoundException::new);
     }
 }

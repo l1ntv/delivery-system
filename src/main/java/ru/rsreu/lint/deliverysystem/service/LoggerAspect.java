@@ -17,7 +17,8 @@ public class LoggerAspect {
     @Pointcut("execution(* ru.rsreu.lint.deliverysystem.service.ClientService.*(..)) || " +
             "execution(* ru.rsreu.lint.deliverysystem.service.CourierService.*(..)) || " +
             "execution(* ru.rsreu.lint.deliverysystem.service.OrderService.*(..))")
-    public void serviceMethods() {}
+    public void serviceMethods() {
+    }
 
     @Before("serviceMethods()")
     public void logBefore(JoinPoint joinPoint) {

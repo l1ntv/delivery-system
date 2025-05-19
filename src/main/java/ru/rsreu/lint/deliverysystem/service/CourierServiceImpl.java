@@ -31,6 +31,6 @@ public class CourierServiceImpl implements CourierService {
 
     @Override
     public List<User> findAll() {
-        return userRepository.findAll();
+        return userRepository.findAllByRole(UserRole.COURIER);
     }
 }

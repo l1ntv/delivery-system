@@ -22,6 +22,8 @@ public class OrderServiceImpl implements OrderService {
 
     private final UserRepository userRepository;
 
+    private static final int MAX_ORDERS_NUMBER = 3;
+
     @Override
     @Transactional
     public Order create(Order order) {
@@ -36,6 +38,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> findCourierOrders(Long courierId) {
+        userRepository.findById(courierId)
+                .orElseThrow(UserNotFoundException::new);
         return orderRepository.findAllByCourier_Id(courierId);
     }
 
@@ -78,6 +82,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private boolean isNumberOrdersCorrect(int numberOrders) {
-        return numberOrders >= 3;
+        return numberOrders >= OrderServiceImpl.MAX_ORDERS_NUMBER;
     }
 }
