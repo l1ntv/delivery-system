@@ -39,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> findCourierOrders(Long courierId) {
         userRepository.findById(courierId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException("Courier not found."));
         return orderRepository.findAllByCourier_Id(courierId);
     }
 
@@ -47,16 +47,16 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public Order assignOrder(Long orderId, Long courierId) {
         User courier = userRepository.findById(courierId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException("Courier not found."));
         List<Order> currentOrders = orderRepository.findAllByCourierAndStatus(courier, OrderStatus.IN_PROGRESS);
         if (isNumberOrdersCorrect(currentOrders.size())) {
-            throw new ResourceConflictException();
+            throw new ResourceConflictException("Incorrect number of orders.");
         }
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(OrderNotFoundException::new);
+                .orElseThrow(() -> new OrderNotFoundException("Order not found."));
         if (order.getCourier() != null) {
-            throw new ResourceConflictException();
+            throw new ResourceConflictException("Order is already assigned to courier.");
         }
 
         order.setStatus(OrderStatus.IN_PROGRESS);
@@ -69,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public Order updateOrderStatus(Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(OrderNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException("Order not found."));
 
         OrderStatus actualStatus = order.getStatus();
         OrderStatus newStatus = actualStatus.equals(OrderStatus.CREATED)

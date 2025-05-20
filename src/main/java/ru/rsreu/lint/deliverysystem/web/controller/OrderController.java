@@ -3,7 +3,6 @@ package ru.rsreu.lint.deliverysystem.web.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.rsreu.lint.deliverysystem.model.Order;
-import ru.rsreu.lint.deliverysystem.model.exception.UserNotFoundException;
 import ru.rsreu.lint.deliverysystem.service.ClientService;
 import ru.rsreu.lint.deliverysystem.service.OrderService;
 import ru.rsreu.lint.deliverysystem.web.dto.AssignCourierDTO;
