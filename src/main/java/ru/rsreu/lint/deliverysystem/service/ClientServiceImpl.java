@@ -40,4 +40,11 @@ public class ClientServiceImpl implements ClientService {
         return userRepository.findByIdAndRole(id, UserRole.CLIENT)
                 .orElseThrow(UserNotFoundException::new);
     }
+
+    @Override
+    public void validateClientExists(Long id) {
+        if (!userRepository.existsByIdAndRole(id, UserRole.CLIENT)) {
+            throw new UserNotFoundException();
+        }
+    }
 }

@@ -3,7 +3,10 @@ package ru.rsreu.lint.deliverysystem.web.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.rsreu.lint.deliverysystem.model.Order;
+import ru.rsreu.lint.deliverysystem.model.exception.UserNotFoundException;
+import ru.rsreu.lint.deliverysystem.service.ClientService;
 import ru.rsreu.lint.deliverysystem.service.OrderService;
+import ru.rsreu.lint.deliverysystem.web.dto.AssignCourierDTO;
 import ru.rsreu.lint.deliverysystem.web.dto.OrderDTO;
 import ru.rsreu.lint.deliverysystem.web.mapper.OrderMapper;
 
@@ -16,10 +19,13 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    private final ClientService clientService;
+
     private final OrderMapper orderMapper;
 
     @PostMapping
     public OrderDTO create(@RequestBody OrderDTO orderDTO) {
+        clientService.validateClientExists(orderDTO.getClientId());
         Order order = orderMapper.toEntity(orderDTO);
         order = orderService.create(order);
         return orderMapper.toDto(order);
@@ -38,8 +44,8 @@ public class OrderController {
     }
 
     @PutMapping("/{id}/assign")
-    public OrderDTO assignOrder(@PathVariable Long id, @RequestBody Long courierId) {
-        Order order = orderService.assignOrder(id, courierId);
+    public OrderDTO assignOrder(@PathVariable Long id, @RequestBody AssignCourierDTO dto) {
+        Order order = orderService.assignOrder(id, dto.getId());
         return orderMapper.toDto(order);
     }
 

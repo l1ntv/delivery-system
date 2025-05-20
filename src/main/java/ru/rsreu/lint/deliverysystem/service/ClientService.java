@@ -11,4 +11,6 @@ public interface ClientService {
     List<User> findAll();
 
     User findById(Long id);
+
+    void validateClientExists(Long id);
 }
