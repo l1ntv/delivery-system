@@ -69,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public Order updateOrderStatus(Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new UserNotFoundException("Order not found."));
+                .orElseThrow(() -> new OrderNotFoundException("Order not found."));
 
         OrderStatus actualStatus = order.getStatus();
         OrderStatus newStatus = actualStatus.equals(OrderStatus.CREATED)
