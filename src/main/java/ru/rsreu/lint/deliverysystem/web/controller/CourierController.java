@@ -1,6 +1,8 @@
 package ru.rsreu.lint.deliverysystem.web.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.rsreu.lint.deliverysystem.model.User;
 import ru.rsreu.lint.deliverysystem.service.CourierService;
@@ -19,15 +21,21 @@ public class CourierController {
     private final UserMapper userMapper;
 
     @PostMapping
-    public UserDTO create(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> create(@RequestBody UserDTO userDTO) {
         User user = userMapper.toEntity(userDTO);
         user = courierService.create(user);
-        return userMapper.toDto(user);
+        UserDTO dto = userMapper.toDto(user);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(dto);
     }
 
     @GetMapping
-    public List<UserDTO> getAllCouriers() {
+    public ResponseEntity<List<UserDTO>> getAllCouriers() {
         List<User> users = courierService.findAll();
-        return userMapper.toDtoList(users);
+        List<UserDTO> dtos = userMapper.toDtoList(users);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(dtos);
     }
 }

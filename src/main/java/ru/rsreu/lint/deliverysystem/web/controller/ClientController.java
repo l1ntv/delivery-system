@@ -3,6 +3,7 @@ package ru.rsreu.lint.deliverysystem.web.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.rsreu.lint.deliverysystem.model.User;
@@ -22,23 +23,31 @@ public class ClientController {
 
     private final UserMapper userMapper;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserDTO create(@Valid @RequestBody UserDTO userDTO) {
+    @PostMapping()
+    public ResponseEntity<UserDTO> create(@Valid @RequestBody UserDTO userDTO) {
         User client = userMapper.toEntity(userDTO);
         client = clientService.create(client);
-        return userMapper.toDto(client);
+        UserDTO dto = userMapper.toDto(client);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(dto);
     }
 
     @GetMapping
-    public List<UserDTO> getAllClients() {
+    public ResponseEntity<List<UserDTO>> getAllClients() {
         List<User> users = clientService.findAll();
-        return userMapper.toDtoList(users);
+        List<UserDTO> dtos = userMapper.toDtoList(users);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(dtos);
     }
 
     @GetMapping("/{id}")
-    public UserDTO getClient(@PathVariable Long id) {
+    public ResponseEntity<UserDTO> getClient(@PathVariable Long id) {
         User user = clientService.findById(id);
-        return userMapper.toDto(user);
+        UserDTO dto = userMapper.toDto(user);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(dto);
     }
 }
