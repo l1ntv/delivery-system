@@ -1,6 +1,7 @@
 package ru.rsreu.lint.deliverysystem.web.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,20 +17,26 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ExceptionBody userNotFound(UserNotFoundException e) {
-        return new ExceptionBody("User not found.");
+    public ResponseEntity<ExceptionBody> userNotFound(UserNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ExceptionBody(e.getMessage()));
     }
 
     @ExceptionHandler(OrderNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ExceptionBody orderNotFound(OrderNotFoundException e) {
-        return new ExceptionBody("Order not found.");
+    public ResponseEntity<ExceptionBody> orderNotFound(OrderNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ExceptionBody(e.getMessage()));
     }
 
     @ExceptionHandler(ResourceConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ExceptionBody resourceConflict(ResourceConflictException e) {
-        return new ExceptionBody("Resource conflict.");
+    public ResponseEntity<ExceptionBody> resourceConflict(ResourceConflictException e) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ExceptionBody(e.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
