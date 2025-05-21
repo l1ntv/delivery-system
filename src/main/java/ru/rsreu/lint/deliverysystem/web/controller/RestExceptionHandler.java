@@ -41,14 +41,14 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ExceptionBody postNotValid(MethodArgumentNotValidException e) {
+    public ResponseEntity<ExceptionBody> requestDataNotValid(MethodArgumentNotValidException e) {
         StringBuilder builder = new StringBuilder();
         for (ObjectError error : e.getAllErrors()) {
             builder.append(error.getDefaultMessage())
                     .append(" ");
         }
-        return new ExceptionBody(
-                builder.toString()
-        );
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ExceptionBody(builder.toString()));
     }
 }

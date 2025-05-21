@@ -36,7 +36,7 @@ public class LoggerAspect {
 
     @AfterThrowing(pointcut = "serviceMethods()", throwing = "error")
     public void logAfterThrowing(JoinPoint joinPoint, Throwable error) {
-        logger.error("Ошибка в методе: {}. Тип сообщения: {}",
+        logger.error("Ошибка в методе: {}. Тип исключения: {}",
                 joinPoint.getSignature().toShortString(),
                 error.toString());
     }

@@ -38,4 +38,10 @@ public class OrderDTO {
             max = 255,
             message = "Country length must be between {min} and {max}.")
     private String country;
+
+    @NotNull(message = "Client id must be not null.")
+    private Long clientId;
+
+    @NotNull(message = "Courier id must be not null.")
+    private Long courierId;
 }

@@ -22,7 +22,7 @@ public class ClientServiceImpl implements ClientService {
     public User create(User user) {
         String login = user.getLogin();
         if (userRepository.findByLogin(login) != null) {
-            throw new ResourceConflictException();
+            throw new ResourceConflictException("Client with this login already exists.");
         }
 
         UserRole clientRole = UserRole.CLIENT;
@@ -38,6 +38,13 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public User findById(Long id) {
         return userRepository.findByIdAndRole(id, UserRole.CLIENT)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException("Client not found."));
+    }
+
+    @Override
+    public void validateClientExists(Long id) {
+        if (!userRepository.existsByIdAndRole(id, UserRole.CLIENT)) {
+            throw new UserNotFoundException("Client not found.");
+        }
     }
 }

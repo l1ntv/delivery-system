@@ -21,7 +21,7 @@ public class CourierServiceImpl implements CourierService {
     public User create(User user) {
         String login = user.getLogin();
         if (userRepository.findByLogin(login) != null) {
-            throw new ResourceConflictException();
+            throw new ResourceConflictException("Courier with this login already exists.");
         }
 
         UserRole clientRole = UserRole.COURIER;

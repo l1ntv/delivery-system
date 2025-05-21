@@ -87,25 +87,31 @@ public class OrderServiceTest {
 
     @Test
     void findCourierOrders_ShouldReturnOrdersByCourierId() {
-        Long courierId = 1L;
+        User courier = User.builder()
+                .login("Test login")
+                .role(UserRole.COURIER)
+                .build();
+        courier.setId(1L);
+
         Order order = Order.builder()
                 .description("Order for courier")
                 .address(null)
                 .address(null)
                 .status(OrderStatus.IN_PROGRESS)
                 .client(null)
-                .courier(null)
+                .courier(courier)
                 .build();
         order.setId(1L);
         List<Order> orders = List.of(order);
 
-        when(orderRepository.findAllByCourier_Id(courierId)).thenReturn(orders);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(courier));
+        when(orderRepository.findAllByCourier_Id(courier.getId())).thenReturn(orders);
 
-        List<Order> result = orderService.findCourierOrders(courierId);
+        List<Order> result = orderService.findCourierOrders(courier.getId());
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(orderRepository, times(1)).findAllByCourier_Id(courierId);
+        verify(orderRepository, times(1)).findAllByCourier_Id(courier.getId());
     }
 
     @Test
