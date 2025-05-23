@@ -3,6 +3,7 @@ package ru.rsreu.lint.deliverysystem.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.rsreu.lint.deliverysystem.aop.Loggable;
 import ru.rsreu.lint.deliverysystem.model.Order;
 import ru.rsreu.lint.deliverysystem.model.User;
 import ru.rsreu.lint.deliverysystem.model.enums.OrderStatus;
@@ -25,6 +26,7 @@ public class OrderServiceImpl implements OrderService {
     private static final int MAX_ORDERS_NUMBER = 3;
 
     @Override
+    @Loggable
     @Transactional
     public Order create(Order order) {
         order.setStatus(OrderStatus.CREATED);
@@ -32,11 +34,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Loggable
     public List<Order> findAll() {
         return orderRepository.findAll();
     }
 
     @Override
+    @Loggable
     public List<Order> findCourierOrders(Long courierId) {
         userRepository.findById(courierId)
                 .orElseThrow(() -> new UserNotFoundException("Courier not found."));
@@ -44,6 +48,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Loggable
     @Transactional
     public Order assignOrder(Long orderId, Long courierId) {
         User courier = userRepository.findById(courierId)
@@ -66,6 +71,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Loggable
     @Transactional
     public Order updateOrderStatus(Long orderId) {
         Order order = orderRepository.findById(orderId)
