@@ -6,10 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.rsreu.lint.deliverysystem.model.User;
 import ru.rsreu.lint.deliverysystem.service.ClientService;
 import ru.rsreu.lint.deliverysystem.web.dto.UserDTO;
-import ru.rsreu.lint.deliverysystem.web.mapper.UserMapper;
 
 import java.util.List;
 
@@ -21,13 +19,9 @@ public class ClientController {
 
     private final ClientService clientService;
 
-    private final UserMapper userMapper;
-
     @PostMapping()
     public ResponseEntity<UserDTO> create(@Valid @RequestBody UserDTO userDTO) {
-        User client = userMapper.toEntity(userDTO);
-        client = clientService.create(client);
-        UserDTO dto = userMapper.toDto(client);
+        UserDTO dto = clientService.create(userDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(dto);
@@ -35,17 +29,15 @@ public class ClientController {
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllClients() {
-        List<User> users = clientService.findAll();
-        List<UserDTO> dtos = userMapper.toDtoList(users);
+        List<UserDTO> users = clientService.findAll();
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(dtos);
+                .body(users);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getClient(@PathVariable Long id) {
-        User user = clientService.findById(id);
-        UserDTO dto = userMapper.toDto(user);
+        UserDTO dto = clientService.findById(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(dto);

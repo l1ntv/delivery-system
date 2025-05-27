@@ -1,6 +1,7 @@
 package ru.rsreu.lint.deliverysystem.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.rsreu.lint.deliverysystem.aop.Loggable;
@@ -12,6 +13,8 @@ import ru.rsreu.lint.deliverysystem.model.exception.ResourceConflictException;
 import ru.rsreu.lint.deliverysystem.model.exception.UserNotFoundException;
 import ru.rsreu.lint.deliverysystem.repository.OrderRepository;
 import ru.rsreu.lint.deliverysystem.repository.UserRepository;
+import ru.rsreu.lint.deliverysystem.web.dto.OrderDTO;
+import ru.rsreu.lint.deliverysystem.web.mapper.OrderMapper;
 
 import java.util.List;
 
@@ -23,34 +26,40 @@ public class OrderServiceImpl implements OrderService {
 
     private final UserRepository userRepository;
 
-    private static final int MAX_ORDERS_NUMBER = 3;
+    private final OrderMapper orderMapper;
+
+    @Value("${settings.max_orders_number}")
+    private int MAX_ORDERS_NUMBER;
 
     @Override
     @Loggable
     @Transactional
-    public Order create(Order order) {
+    public OrderDTO create(OrderDTO dto) {
+        Order order = orderMapper.toEntity(dto);
         order.setStatus(OrderStatus.CREATED);
-        return orderRepository.save(order);
+        orderRepository.save(order);
+        return orderMapper.toDto(order);
     }
 
     @Override
     @Loggable
-    public List<Order> findAll() {
-        return orderRepository.findAll();
+    public List<OrderDTO> findAll() {
+        return orderMapper.toDtoList(orderRepository.findAll());
     }
 
     @Override
     @Loggable
-    public List<Order> findCourierOrders(Long courierId) {
-        userRepository.findById(courierId)
-                .orElseThrow(() -> new UserNotFoundException("Courier not found."));
-        return orderRepository.findAllByCourier_Id(courierId);
+    public List<OrderDTO> findCourierOrders(Long courierId) {
+        if (!userRepository.existsById(courierId)) {
+            throw new UserNotFoundException("Courier not found.");
+        }
+        return orderMapper.toDtoList(orderRepository.findAllByCourier_Id(courierId));
     }
 
     @Override
     @Loggable
     @Transactional
-    public Order assignOrder(Long orderId, Long courierId) {
+    public OrderDTO assignOrder(Long orderId, Long courierId) {
         User courier = userRepository.findById(courierId)
                 .orElseThrow(() -> new UserNotFoundException("Courier not found."));
         List<Order> currentOrders = orderRepository.findAllByCourierAndStatus(courier, OrderStatus.IN_PROGRESS);
@@ -67,13 +76,13 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.IN_PROGRESS);
         order.setCourier(courier);
         orderRepository.save(order);
-        return order;
+        return orderMapper.toDto(order);
     }
 
     @Override
     @Loggable
     @Transactional
-    public Order updateOrderStatus(Long orderId) {
+    public OrderDTO updateOrderStatus(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found."));
 
@@ -84,10 +93,10 @@ public class OrderServiceImpl implements OrderService {
 
         order.setStatus(newStatus);
         orderRepository.save(order);
-        return order;
+        return orderMapper.toDto(order);
     }
 
     private boolean isNumberOrdersCorrect(int numberOrders) {
-        return numberOrders >= OrderServiceImpl.MAX_ORDERS_NUMBER;
+        return numberOrders >= MAX_ORDERS_NUMBER;
     }
 }

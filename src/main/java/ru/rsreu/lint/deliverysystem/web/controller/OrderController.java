@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.rsreu.lint.deliverysystem.model.Order;
 import ru.rsreu.lint.deliverysystem.service.ClientService;
 import ru.rsreu.lint.deliverysystem.service.OrderService;
+import ru.rsreu.lint.deliverysystem.web.dto.AssignCourierDTO;
 import ru.rsreu.lint.deliverysystem.web.dto.OrderDTO;
 import ru.rsreu.lint.deliverysystem.web.mapper.OrderMapper;
 
@@ -26,9 +26,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<OrderDTO> create(@RequestBody OrderDTO orderDTO) {
         clientService.validateClientExists(orderDTO.getClientId());
-        Order order = orderMapper.toEntity(orderDTO);
-        order = orderService.create(order);
-        OrderDTO dto = orderMapper.toDto(order);
+        OrderDTO dto = orderService.create(orderDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(dto);
@@ -36,37 +34,33 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<List<OrderDTO>> getAllOrders() {
-        List<Order> orders = orderService.findAll();
-        List<OrderDTO> dtos = orderMapper.toDtoList(orders);
+        List<OrderDTO> orders = orderService.findAll();
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(dtos);
+                .body(orders);
     }
 
     @GetMapping("/courier/{courierId}")
     public ResponseEntity<List<OrderDTO>> getCourierOrders(@PathVariable Long courierId) {
-        List<Order> orders = orderService.findCourierOrders(courierId);
-        List<OrderDTO> dtos = orderMapper.toDtoList(orders);
+        List<OrderDTO> orders = orderService.findCourierOrders(courierId);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(dtos);
+                .body(orders);
     }
 
     @PutMapping("/{id}/assign")
-    public ResponseEntity<OrderDTO> assignOrder(@PathVariable Long id, @RequestBody Long courierId) {
-        Order order = orderService.assignOrder(id, courierId);
-        OrderDTO dto = orderMapper.toDto(order);
+    public ResponseEntity<OrderDTO> assignOrder(@PathVariable Long id, @RequestBody AssignCourierDTO assignCourierDTO) {
+        OrderDTO order = orderService.assignOrder(id, assignCourierDTO.getId());
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(dto);
+                .body(order);
     }
 
     @PutMapping("/{id}/status")
     public ResponseEntity<OrderDTO> updateStatus(@PathVariable Long id) {
-        Order order = orderService.updateOrderStatus(id);
-        OrderDTO dto = orderMapper.toDto(order);
+        OrderDTO order = orderService.updateOrderStatus(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(dto);
+                .body(order);
     }
 }

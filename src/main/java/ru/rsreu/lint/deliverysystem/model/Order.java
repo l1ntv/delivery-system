@@ -2,13 +2,14 @@ package ru.rsreu.lint.deliverysystem.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import ru.rsreu.lint.deliverysystem.model.enums.OrderStatus;
 
 @Entity(name = "orders")
 @Getter
 @Setter
 @ToString
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Order extends AbstractEntity {

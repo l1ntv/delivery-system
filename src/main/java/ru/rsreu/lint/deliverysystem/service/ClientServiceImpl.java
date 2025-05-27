@@ -9,6 +9,8 @@ import ru.rsreu.lint.deliverysystem.model.enums.UserRole;
 import ru.rsreu.lint.deliverysystem.model.exception.ResourceConflictException;
 import ru.rsreu.lint.deliverysystem.model.exception.UserNotFoundException;
 import ru.rsreu.lint.deliverysystem.repository.UserRepository;
+import ru.rsreu.lint.deliverysystem.web.dto.UserDTO;
+import ru.rsreu.lint.deliverysystem.web.mapper.UserMapper;
 
 import java.util.List;
 
@@ -18,10 +20,13 @@ public class ClientServiceImpl implements ClientService {
 
     private final UserRepository userRepository;
 
+    private final UserMapper userMapper;
+
     @Override
     @Loggable
     @Transactional
-    public User create(User user) {
+    public UserDTO create(UserDTO userDTO) {
+        User user = userMapper.toEntity(userDTO);
         String login = user.getLogin();
         if (userRepository.findByLogin(login) != null) {
             throw new ResourceConflictException("Client with this login already exists.");
@@ -29,20 +34,22 @@ public class ClientServiceImpl implements ClientService {
 
         UserRole clientRole = UserRole.CLIENT;
         user.setRole(clientRole);
-        return userRepository.save(user);
+        userRepository.save(user);
+        return userMapper.toDto(user);
     }
 
     @Override
     @Loggable
-    public List<User> findAll() {
-        return userRepository.findAllByRole(UserRole.CLIENT);
+    public List<UserDTO> findAll() {
+        return userMapper.toDtoList(userRepository.findAllByRole(UserRole.CLIENT));
     }
 
     @Override
     @Loggable
-    public User findById(Long id) {
-        return userRepository.findByIdAndRole(id, UserRole.CLIENT)
+    public UserDTO findById(Long id) {
+        User user = userRepository.findByIdAndRole(id, UserRole.CLIENT)
                 .orElseThrow(() -> new UserNotFoundException("Client not found."));
+        return userMapper.toDto(user);
     }
 
     @Override

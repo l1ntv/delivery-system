@@ -1,18 +1,18 @@
 package ru.rsreu.lint.deliverysystem.service;
 
-import ru.rsreu.lint.deliverysystem.model.Order;
+import ru.rsreu.lint.deliverysystem.web.dto.OrderDTO;
 
 import java.util.List;
 
 public interface OrderService {
 
-    Order create(Order order);
+    OrderDTO create(OrderDTO order);
 
-    List<Order> findAll();
+    List<OrderDTO> findAll();
 
-    List<Order> findCourierOrders(Long courierId);
+    List<OrderDTO> findCourierOrders(Long courierId);
 
-    Order assignOrder(Long orderId, Long courierId);
+    OrderDTO assignOrder(Long orderId, Long courierId);
 
-    Order updateOrderStatus(Long orderId);
+    OrderDTO updateOrderStatus(Long orderId);
 }

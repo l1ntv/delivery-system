@@ -1,12 +1,12 @@
 package ru.rsreu.lint.deliverysystem.service;
 
-import ru.rsreu.lint.deliverysystem.model.User;
+import ru.rsreu.lint.deliverysystem.web.dto.UserDTO;
 
 import java.util.List;
 
 public interface CourierService {
 
-    User create(User user);
+    UserDTO create(UserDTO user);
 
-    List<User> findAll();
+    List<UserDTO> findAll();
 }

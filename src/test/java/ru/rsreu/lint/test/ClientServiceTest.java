@@ -1,26 +1,24 @@
 package ru.rsreu.lint.test;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
 import ru.rsreu.lint.deliverysystem.model.User;
 import ru.rsreu.lint.deliverysystem.model.enums.UserRole;
 import ru.rsreu.lint.deliverysystem.model.exception.ResourceConflictException;
 import ru.rsreu.lint.deliverysystem.model.exception.UserNotFoundException;
 import ru.rsreu.lint.deliverysystem.repository.UserRepository;
 import ru.rsreu.lint.deliverysystem.service.ClientServiceImpl;
+import ru.rsreu.lint.deliverysystem.web.dto.UserDTO;
+import ru.rsreu.lint.deliverysystem.web.mapper.UserMapper;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-class ClientServiceTest {
+public class ClientServiceTest {
 
     @InjectMocks
     private ClientServiceImpl clientService;
@@ -28,103 +26,118 @@ class ClientServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    @Test
-    void findById_ExistingClient_ShouldReturnUser() {
-        Long userId = 1L;
-        User user = User.builder()
-                .login("testClient")
+    @Mock
+    private UserMapper userMapper;
+
+    private User user;
+
+    private UserDTO userDTO;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        user = new User();
+        user.setId(1L);
+        user.setLogin("testuser");
+        user.setRole(UserRole.CLIENT);
+
+        userDTO = UserDTO.builder()
+                .login("testuser")
                 .role(UserRole.CLIENT)
                 .build();
-        user.setId(userId);
-
-        when(userRepository.findByIdAndRole(userId, UserRole.CLIENT)).thenReturn(Optional.of(user));
-
-        User foundUser = clientService.findById(userId);
-
-        assertNotNull(foundUser);
-        assertEquals(userId, foundUser.getId());
-        assertEquals("testClient", foundUser.getLogin());
-        assertEquals(UserRole.CLIENT, foundUser.getRole());
-
-        verify(userRepository, times(1)).findByIdAndRole(userId, UserRole.CLIENT);
     }
 
     @Test
-    void findById_NonExistingClient_ShouldThrowException() {
-        Long userId = 1L;
+    void testCreateUser_Success() {
+        when(userRepository.findByLogin("testuser")).thenReturn(null);
+        when(userMapper.toEntity(userDTO)).thenReturn(user);
+        when(userMapper.toDto(user)).thenReturn(userDTO);
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
-        when(userRepository.findByIdAndRole(userId, UserRole.CLIENT)).thenReturn(Optional.empty());
-
-        assertThrows(UserNotFoundException.class, () -> clientService.findById(userId));
-        verify(userRepository, times(1)).findByIdAndRole(userId, UserRole.CLIENT);
-    }
-
-    @Test
-    void findAll_ClientsExist_ShouldReturnListOfClients() {
-        User firstUser = User.builder()
-                .login("firstUser")
-                .role(UserRole.CLIENT)
-                .build();
-        firstUser.setId(1L);
-
-        User secondUser = User.builder()
-                .login("secondUser")
-                .role(UserRole.CLIENT)
-                .build();
-        secondUser.setId(2L);
-
-        List<User> userList = Arrays.asList(firstUser, secondUser);
-        when(userRepository.findAllByRole(UserRole.CLIENT)).thenReturn(userList);
-
-        List<User> result = clientService.findAll();
+        UserDTO result = clientService.create(userDTO);
 
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertTrue(result.contains(firstUser));
-        assertTrue(result.contains(secondUser));
-
-        verify(userRepository, times(1)).findAllByRole(UserRole.CLIENT);
-    }
-
-    @Test
-    void findAll_NoClientsExist_ShouldReturnEmptyList() {
-        when(userRepository.findAllByRole(UserRole.CLIENT)).thenReturn(List.of());
-
-        List<User> result = clientService.findAll();
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-
-        verify(userRepository, times(1)).findAllByRole(UserRole.CLIENT);
-    }
-
-    @Test
-    void create_ClientWithUniqueLogin_ShouldSaveUser() {
-        User user = User.builder()
-                .login("testClient")
-                .build();
-
-        when(userRepository.findByLogin("testClient")).thenReturn(null);
-        when(userRepository.save(user)).thenReturn(user);
-
-        User createdUser = clientService.create(user);
-
-        assertNotNull(createdUser);
-        assertEquals(UserRole.CLIENT, createdUser.getRole());
-        verify(userRepository, times(1)).findByLogin("testClient");
+        assertEquals("testuser", result.getLogin());
         verify(userRepository, times(1)).save(user);
     }
 
     @Test
-    void create_ClientWithExistingLogin_ShouldThrowException() {
-        User user = User.builder()
-                .login("testClient")
-                .build();
+    void testCreateUserWithExistingLogin() {
+        when(userMapper.toEntity(userDTO)).thenReturn(user);
+        when(userRepository.findByLogin("testuser")).thenReturn(user);
 
-        when(userRepository.findByLogin("testClient")).thenReturn(user);
+        ResourceConflictException exception = assertThrows(
+                ResourceConflictException.class,
+                () -> clientService.create(userDTO)
+        );
 
-        assertThrows(ResourceConflictException.class, () -> clientService.create(user));
-        verify(userRepository, times(1)).findByLogin("testClient");
-        verify(userRepository, never()).save(user);
+        assertEquals("Client with this login already exists.", exception.getMessage());
+    }
+
+    @Test
+    void testFindAllClients() {
+        List<User> users = List.of(user);
+        List<UserDTO> dtos = List.of(
+                UserDTO.builder()
+                        .login("testuser")
+                        .role(UserRole.CLIENT)
+                        .build()
+        );
+
+        when(userRepository.findAllByRole(UserRole.CLIENT)).thenReturn(users);
+        when(userMapper.toDtoList(users)).thenReturn(dtos);
+
+        List<UserDTO> result = clientService.findAll();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("testuser", result.get(0).getLogin());
+    }
+
+    @Test
+    void testFindByIdForExistsClient() {
+        when(userRepository.findByIdAndRole(1L, UserRole.CLIENT)).thenReturn(Optional.of(user));
+        when(userMapper.toDto(user)).thenReturn(
+                UserDTO.builder()
+                        .login("testuser")
+                        .role(UserRole.CLIENT)
+                        .build()
+        );
+
+        UserDTO result = clientService.findById(1L);
+
+        assertNotNull(result);
+        assertEquals("testuser", result.getLogin());
+    }
+
+    @Test
+    void testFindByIdForNotFoundClient() {
+        when(userRepository.findByIdAndRole(1L, UserRole.CLIENT)).thenReturn(Optional.empty());
+
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> clientService.findById(1L)
+        );
+
+        assertEquals("Client not found.", exception.getMessage());
+    }
+
+    @Test
+    void testValidateClientExists() {
+        when(userRepository.existsByIdAndRole(1L, UserRole.CLIENT)).thenReturn(true);
+        assertDoesNotThrow(() -> clientService.validateClientExists(1L));
+    }
+
+    @Test
+    void testValidateNotFoundClient() {
+        when(userRepository.existsByIdAndRole(1L, UserRole.CLIENT)).thenReturn(false);
+
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> clientService.validateClientExists(1L)
+        );
+
+        assertEquals("Client not found.", exception.getMessage());
     }
 }

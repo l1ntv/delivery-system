@@ -8,6 +8,8 @@ import ru.rsreu.lint.deliverysystem.model.User;
 import ru.rsreu.lint.deliverysystem.model.enums.UserRole;
 import ru.rsreu.lint.deliverysystem.model.exception.ResourceConflictException;
 import ru.rsreu.lint.deliverysystem.repository.UserRepository;
+import ru.rsreu.lint.deliverysystem.web.dto.UserDTO;
+import ru.rsreu.lint.deliverysystem.web.mapper.UserMapper;
 
 import java.util.List;
 
@@ -17,10 +19,13 @@ public class CourierServiceImpl implements CourierService {
 
     private final UserRepository userRepository;
 
+    private final UserMapper userMapper;
+
     @Override
     @Loggable
     @Transactional
-    public User create(User user) {
+    public UserDTO create(UserDTO dto) {
+        User user = userMapper.toEntity(dto);
         String login = user.getLogin();
         if (userRepository.findByLogin(login) != null) {
             throw new ResourceConflictException("Courier with this login already exists.");
@@ -28,12 +33,13 @@ public class CourierServiceImpl implements CourierService {
 
         UserRole clientRole = UserRole.COURIER;
         user.setRole(clientRole);
-        return userRepository.save(user);
+        userRepository.save(user);
+        return userMapper.toDto(user);
     }
 
     @Override
     @Loggable
-    public List<User> findAll() {
-        return userRepository.findAllByRole(UserRole.COURIER);
+    public List<UserDTO> findAll() {
+        return userMapper.toDtoList(userRepository.findAllByRole(UserRole.COURIER));
     }
 }

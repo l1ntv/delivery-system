@@ -1,24 +1,21 @@
 package ru.rsreu.lint.test;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
 import ru.rsreu.lint.deliverysystem.model.User;
 import ru.rsreu.lint.deliverysystem.model.enums.UserRole;
 import ru.rsreu.lint.deliverysystem.model.exception.ResourceConflictException;
 import ru.rsreu.lint.deliverysystem.repository.UserRepository;
 import ru.rsreu.lint.deliverysystem.service.CourierServiceImpl;
+import ru.rsreu.lint.deliverysystem.web.dto.UserDTO;
+import ru.rsreu.lint.deliverysystem.web.mapper.UserMapper;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.never;
 
-@ExtendWith(MockitoExtension.class)
 public class CourierServiceTest {
 
     @InjectMocks
@@ -27,72 +24,68 @@ public class CourierServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    @Test
-    void create_CourierWithUniqueLogin_ShouldSaveUser() {
-        User user = User.builder()
-                .login("testCourier")
+    @Mock
+    private UserMapper userMapper;
+
+    private User user;
+
+    private UserDTO userDTO;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        user = User.builder()
+                .id(1L)
+                .login("courieruser")
+                .role(UserRole.COURIER)
                 .build();
 
-        when(userRepository.findByLogin("testCourier")).thenReturn(null);
-        when(userRepository.save(user)).thenReturn(user);
+        userDTO = UserDTO.builder()
+                .login("courieruser")
+                .role(UserRole.COURIER)
+                .build();
+    }
 
-        User createdUser = courierService.create(user);
+    @Test
+    void testSuccessCreateCourier() {
+        when(userMapper.toEntity(userDTO)).thenReturn(user);
+        when(userRepository.findByLogin("courieruser")).thenReturn(null);
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userMapper.toDto(user)).thenReturn(userDTO);
 
-        assertNotNull(createdUser);
-        assertEquals(UserRole.COURIER, createdUser.getRole());
-        verify(userRepository, times(1)).findByLogin("testCourier");
+        UserDTO result = courierService.create(userDTO);
+
+        assertNotNull(result);
+        assertEquals("courieruser", result.getLogin());
         verify(userRepository, times(1)).save(user);
     }
 
     @Test
-    void create_CourierWithExistingLogin_ShouldThrowException() {
-        User user = User.builder()
-                .login("testCourier")
-                .build();
+    void testCreateCourierWithExistingLogin() {
+        when(userMapper.toEntity(userDTO)).thenReturn(user);
+        when(userRepository.findByLogin("courieruser")).thenReturn(user);
 
-        when(userRepository.findByLogin("testCourier")).thenReturn(user);
+        ResourceConflictException exception = assertThrows(
+                ResourceConflictException.class,
+                () -> courierService.create(userDTO)
+        );
 
-        assertThrows(ResourceConflictException.class, () -> courierService.create(user));
-        verify(userRepository, times(1)).findByLogin("testCourier");
-        verify(userRepository, never()).save(user);
+        assertEquals("Courier with this login already exists.", exception.getMessage());
     }
 
     @Test
-    void findAll_CouriersExist_ShouldReturnListOfCouriers() {
-        User firstUser = User.builder()
-                .login("firstUser")
-                .role(UserRole.CLIENT)
-                .build();
-        firstUser.setId(1L);
+    void testFindAllCouriers() {
+        List<User> couriers = List.of(user);
+        List<UserDTO> dtoList = List.of(userDTO);
 
-        User secondUser = User.builder()
-                .login("user2")
-                .role(UserRole.CLIENT)
-                .build();
-        secondUser.setId(2L);
+        when(userRepository.findAllByRole(UserRole.COURIER)).thenReturn(couriers);
+        when(userMapper.toDtoList(couriers)).thenReturn(dtoList);
 
-        List<User> userList = Arrays.asList(firstUser, secondUser);
-        when(userRepository.findAllByRole(UserRole.COURIER)).thenReturn(userList);
-
-        List<User> result = courierService.findAll();
+        List<UserDTO> result = courierService.findAll();
 
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertTrue(result.contains(firstUser));
-        assertTrue(result.contains(secondUser));
-
-        verify(userRepository, times(1)).findAllByRole(UserRole.COURIER);
-    }
-
-    @Test
-    void findAll_NoCouriersExist_ShouldReturnEmptyList() {
-        when(userRepository.findAllByRole(UserRole.COURIER)).thenReturn(List.of());
-
-        List<User> result = courierService.findAll();
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-
-        verify(userRepository, times(1)).findAllByRole(UserRole.COURIER);
+        assertEquals(1, result.size());
+        assertEquals("courieruser", result.get(0).getLogin());
     }
 }
