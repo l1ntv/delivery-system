@@ -34,6 +34,7 @@
         <h2.version>2.3.232</h2.version>
         <log4j2.version>2.24.3</log4j2.version>
         <mockito.version>5.17.0</mockito.version>
+        <telegram-bots.version>6.9.7.1</telegram-bots.version>
     </properties>
     <dependencies>
         <dependency>
@@ -99,6 +100,12 @@
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.telegram</groupId>
+            <artifactId>telegrambots</artifactId>
+            <version>${telegram-bots.version}</version>
         </dependency>
     </dependencies>
 
