@@ -1,6 +1,8 @@
 package ru.rsreu.lint.deliverysystem.bot;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import ru.rsreu.lint.deliverysystem.web.dto.AssignCourierDTO;
 import ru.rsreu.lint.deliverysystem.web.dto.OrderDTO;
@@ -12,7 +14,7 @@ import java.util.List;
 public class APIClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private final String baseUrl;
 
     public APIClient(String baseUrl) {
@@ -95,8 +97,19 @@ public class APIClient {
     public OrderDTO assignOrder(Long orderId, Long courierId) throws Exception {
         AssignCourierDTO dto = new AssignCourierDTO();
         dto.setId(courierId);
+
         try {
-            return restTemplate.postForObject(baseUrl + "/orders/{id}/assign", dto, OrderDTO.class, orderId);
+            HttpEntity<AssignCourierDTO> request = new HttpEntity<>(dto);
+            ResponseEntity<OrderDTO> response = restTemplate.exchange(
+                    baseUrl + "/orders/{id}/assign",
+                    HttpMethod.PUT,
+                    request,
+                    OrderDTO.class,
+                    orderId
+            );
+
+            return response.getBody();
+
         } catch (Exception e) {
             handleException(e, "Ошибка при назначении курьера на заказ");
             return null;
@@ -104,8 +117,22 @@ public class APIClient {
     }
 
     public OrderDTO updateOrderStatus(Long orderId) throws Exception {
+        String url = baseUrl + "/orders/{id}/status";
+
         try {
-            return restTemplate.postForObject(baseUrl + "/orders/{id}/status", null, OrderDTO.class, orderId);
+            HttpEntity<Void> entity = new HttpEntity<>(null);
+            ResponseEntity<OrderDTO> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.PUT,
+                    entity,
+                    OrderDTO.class,
+                    orderId
+            );
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return response.getBody();
+            }
+            throw new Exception();
         } catch (Exception e) {
             handleException(e, "Ошибка при изменении статуса заказа");
             return null;

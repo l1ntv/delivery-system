@@ -30,5 +30,7 @@ public enum StatesEnum {
 
     CLIENT_INFO,
 
-    GETTING_COURIER_ORDERS
+    GETTING_COURIER_ORDERS,
+
+    UPDATE_ORDER_STATUS
 }

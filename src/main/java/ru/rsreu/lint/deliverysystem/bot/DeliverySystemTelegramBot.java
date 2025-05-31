@@ -9,11 +9,14 @@ import java.util.Map;
 
 public class DeliverySystemTelegramBot extends TelegramLongPollingBot {
 
-    private static final String BOT_TOKEN = System.getenv("TOKEN"); // замените на свой токен
-    private static final String BASE_URL = "http://localhost:8080"; // или ngrok URL
+    private static final String BOT_TOKEN = System.getenv("TOKEN");
+
+    private static final String BASE_URL = System.getenv("URL");
 
     private final APIClient apiClient = new APIClient(BASE_URL);
+
     private final BotCommandHandler commandHandler = new BotCommandHandler(apiClient, this);
+
     private final Map<Long, InputState> userInputs = new HashMap<>();
 
     @Override
@@ -23,7 +26,7 @@ public class DeliverySystemTelegramBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
 
             if (messageText.startsWith("/")) {
-                commandHandler.handleCommand(update, messageText, chatId);
+                commandHandler.handleCommand(messageText, chatId);
             } else {
                 commandHandler.handleInput(update, chatId);
             }

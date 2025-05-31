@@ -1,5 +1,6 @@
 package ru.rsreu.lint.deliverysystem.bot;
 
+import ru.rsreu.lint.deliverysystem.model.enums.UserRole;
 import ru.rsreu.lint.deliverysystem.web.dto.OrderDTO;
 import ru.rsreu.lint.deliverysystem.web.dto.UserDTO;
 
@@ -31,7 +32,7 @@ public class InputState {
     public UserDTO buildUserDTO() {
         return new UserDTO(
                 (String) data.get("login"),
-                (ru.rsreu.lint.deliverysystem.model.enums.UserRole) data.get("role")
+                (UserRole) data.get("role")
         );
     }
 

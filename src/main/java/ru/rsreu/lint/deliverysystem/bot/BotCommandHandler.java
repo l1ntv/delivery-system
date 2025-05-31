@@ -9,6 +9,7 @@ import java.util.List;
 public class BotCommandHandler {
 
     private final APIClient apiClient;
+
     private final DeliverySystemTelegramBot bot;
 
     public BotCommandHandler(APIClient apiClient, DeliverySystemTelegramBot bot) {
@@ -16,7 +17,7 @@ public class BotCommandHandler {
         this.bot = bot;
     }
 
-    public void handleCommand(Update update, String command, Long chatId) {
+    public void handleCommand(String command, Long chatId) {
         switch (command) {
             case "/start":
                 bot.sendText(chatId, "Добро пожаловать в Delivery System Bot!");
@@ -86,6 +87,12 @@ public class BotCommandHandler {
                 bot.getUserInputs().get(chatId).setState(StatesEnum.ASSIGNING_COURIER_ID);
                 break;
 
+            case "/updateorderstatus":
+                bot.sendText(chatId, "Введите ID заказа:");
+                bot.getUserInputs().put(chatId, new InputState());
+                bot.getUserInputs().get(chatId).setState(StatesEnum.UPDATE_ORDER_STATUS);
+                break;
+
             default:
                 bot.sendText(chatId, "Неизвестная команда.");
                 sendMenu(chatId);
@@ -108,13 +115,14 @@ public class BotCommandHandler {
                     break;
 
                 case CREATING_CLIENT_ROLE:
-                    ru.rsreu.lint.deliverysystem.model.enums.UserRole role = ru.rsreu.lint.deliverysystem.model.enums.UserRole.valueOf(text.toUpperCase());
+                    ru.rsreu.lint.deliverysystem.model.enums.UserRole role =
+                            ru.rsreu.lint.deliverysystem.model.enums.UserRole.valueOf(text.toUpperCase());
                     state.put("role", role);
                     UserDTO createdClient = apiClient.createClient(state.buildUserDTO());
                     if (createdClient != null) {
-                        bot.sendText(chatId, "Клиент создан:\n" + createdClient);
+                        bot.sendText(chatId, "✅ Клиент создан:\n" + formatUser(createdClient));
                     } else {
-                        bot.sendText(chatId, "Ошибка при создании клиента.");
+                        bot.sendText(chatId, "❌ Ошибка при создании клиента.");
                     }
                     bot.getUserInputs().remove(chatId);
                     break;
@@ -126,13 +134,14 @@ public class BotCommandHandler {
                     break;
 
                 case CREATING_COURIER_ROLE:
-                    ru.rsreu.lint.deliverysystem.model.enums.UserRole courierRole = ru.rsreu.lint.deliverysystem.model.enums.UserRole.valueOf(text.toUpperCase());
+                    ru.rsreu.lint.deliverysystem.model.enums.UserRole courierRole =
+                            ru.rsreu.lint.deliverysystem.model.enums.UserRole.valueOf(text.toUpperCase());
                     state.put("role", courierRole);
                     UserDTO createdCourier = apiClient.createCourier(state.buildUserDTO());
                     if (createdCourier != null) {
-                        bot.sendText(chatId, "Курьер создан:\n" + createdCourier);
+                        bot.sendText(chatId, "🚚 Курьер создан:\n" + formatUser(createdCourier));
                     } else {
-                        bot.sendText(chatId, "Ошибка при создании курьера.");
+                        bot.sendText(chatId, "❌ Ошибка при создании курьера.");
                     }
                     bot.getUserInputs().remove(chatId);
                     break;
@@ -171,9 +180,9 @@ public class BotCommandHandler {
                     state.put("country", text);
                     OrderDTO createdOrder = apiClient.createOrder(state.buildOrderDTO());
                     if (createdOrder != null) {
-                        bot.sendText(chatId, "Заказ создан:\n" + createdOrder);
+                        bot.sendText(chatId, "📦 Заказ создан:\n" + formatOrder(createdOrder));
                     } else {
-                        bot.sendText(chatId, "Ошибка при создании заказа.");
+                        bot.sendText(chatId, "❌ Ошибка при создании заказа.");
                     }
                     bot.getUserInputs().remove(chatId);
                     break;
@@ -189,9 +198,9 @@ public class BotCommandHandler {
                     Long courierId = Long.parseLong(text);
                     OrderDTO assignedOrder = apiClient.assignOrder((Long) state.get("orderId"), courierId);
                     if (assignedOrder != null) {
-                        bot.sendText(chatId, "Заказ назначен:\n" + assignedOrder);
+                        bot.sendText(chatId, "🚚 Заказ назначен:\n" + formatOrder(assignedOrder));
                     } else {
-                        bot.sendText(chatId, "Ошибка при назначении курьера на заказ.");
+                        bot.sendText(chatId, "❌ Ошибка при назначении курьера.");
                     }
                     bot.getUserInputs().remove(chatId);
                     break;
@@ -200,9 +209,9 @@ public class BotCommandHandler {
                     Long clientId = Long.parseLong(text);
                     UserDTO client = apiClient.getClientById(clientId);
                     if (client != null) {
-                        bot.sendText(chatId, client.toString());
+                        bot.sendText(chatId, "👤 Информация о клиенте:\n" + formatUser(client));
                     } else {
-                        bot.sendText(chatId, "Клиент с ID " + clientId + " не найден.");
+                        bot.sendText(chatId, "❌ Клиент с ID " + clientId + " не найден.");
                     }
                     bot.getUserInputs().remove(chatId);
                     break;
@@ -211,21 +220,32 @@ public class BotCommandHandler {
                     Long courierIdForOrders = Long.parseLong(text);
                     List<OrderDTO> orders = apiClient.getCourierOrders(courierIdForOrders);
                     if (orders != null && !orders.isEmpty()) {
-                        bot.sendText(chatId, formatOrders(orders));
+                        bot.sendText(chatId, "📦 Заказы курьера:\n" + formatOrdersList(orders));
                     } else {
-                        bot.sendText(chatId, "У курьера с ID " + courierIdForOrders + " нет заказов.");
+                        bot.sendText(chatId, "📭 У курьера нет активных заказов.");
+                    }
+                    bot.getUserInputs().remove(chatId);
+                    break;
+
+                case UPDATE_ORDER_STATUS:
+                    Long updatedOrderId = Long.parseLong(text);
+                    OrderDTO updatedOrder = apiClient.updateOrderStatus(updatedOrderId);
+                    if (updatedOrder != null) {
+                        bot.sendText(chatId, "📦 Статус заказа обновлён:\n" + formatOrder(updatedOrder));
+                    } else {
+                        bot.sendText(chatId, "❌ Не удалось обновить статус заказа.");
                     }
                     bot.getUserInputs().remove(chatId);
                     break;
             }
         } catch (Exception e) {
-            bot.sendText(chatId, "Ошибка: " + e.getMessage());
+            bot.sendText(chatId, "❌ Ошибка: " + e.getMessage());
             bot.getUserInputs().remove(chatId);
         }
     }
 
     private void sendMenu(Long chatId) {
-        StringBuilder menu = new StringBuilder("Доступные команды:\n");
+        StringBuilder menu = new StringBuilder("📚 Доступные команды:\n");
         menu.append("/clients — все клиенты\n");
         menu.append("/clientinfo — информация о клиенте по ID\n");
         menu.append("/createclient — создать клиента\n");
@@ -235,30 +255,68 @@ public class BotCommandHandler {
         menu.append("/createorder — создать заказ\n");
         menu.append("/courierorders — заказы курьера\n");
         menu.append("/assignorder — назначить курьера на заказ\n");
+        menu.append("/updateorderstatus — обновить статус заказа\n");
 
         bot.sendText(chatId, menu.toString());
     }
 
-    private String formatClients(List<UserDTO> clients) {
-        if (clients == null || clients.isEmpty()) {
+    private String formatUser(UserDTO user) {
+        return String.format(
+                """
+                        Логин: %s
+                        Роль: %s
+                        """,
+                user.getLogin(),
+                user.getRole()
+        );
+    }
+
+    private String formatClients(List<UserDTO> users) {
+        if (users == null || users.isEmpty()) {
             return "Список клиентов пуст.";
         }
 
-        StringBuilder sb = new StringBuilder("Список клиентов:\n");
-        for (UserDTO c : clients) {
-            sb.append("- ").append(c).append("\n");
+        StringBuilder sb = new StringBuilder("👥 Список клиентов:\n");
+        for (UserDTO u : users) {
+            sb.append("👤 ").append(formatUser(u)).append("\n");
         }
         return sb.toString();
     }
 
-    private String formatCouriers(List<UserDTO> couriers) {
-        if (couriers == null || couriers.isEmpty()) {
+    private String formatCouriers(List<UserDTO> users) {
+        if (users == null || users.isEmpty()) {
             return "Список курьеров пуст.";
         }
 
-        StringBuilder sb = new StringBuilder("Список курьеров:\n");
-        for (UserDTO c : couriers) {
-            sb.append("- ").append(c).append("\n");
+        StringBuilder sb = new StringBuilder("🚚 Список курьеров:\n");
+        for (UserDTO u : users) {
+            sb.append("👤 ").append(formatUser(u)).append("\n");
+        }
+        return sb.toString();
+    }
+
+    private String formatOrder(OrderDTO order) {
+        return String.format(
+                """
+                        Статус: %s
+                        Адрес: %s, %s, %s (%s)
+                        Клиент ID: %d
+                        Курьер ID: %d
+                        """,
+                order.getStatus(),
+                order.getStreet(),
+                order.getCity(),
+                order.getPostalCode(),
+                order.getCountry(),
+                order.getClientId(),
+                order.getCourierId()
+        );
+    }
+
+    private String formatOrdersList(List<OrderDTO> orders) {
+        StringBuilder sb = new StringBuilder();
+        for (OrderDTO o : orders) {
+            sb.append("📦 ").append(formatOrder(o)).append("\n");
         }
         return sb.toString();
     }
@@ -268,10 +326,6 @@ public class BotCommandHandler {
             return "Список заказов пуст.";
         }
 
-        StringBuilder sb = new StringBuilder("Список заказов:\n");
-        for (OrderDTO o : orders) {
-            sb.append("- ").append(o).append("\n");
-        }
-        return sb.toString();
+        return "📦 Список заказов:\n" + formatOrdersList(orders);
     }
 }
